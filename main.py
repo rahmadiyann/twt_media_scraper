@@ -158,20 +158,22 @@ def main():
     """
     Main function to execute the script. It retrieves user media and saves it locally.
     """
-    if len(sys.argv) != 5 or (sys.argv[1] not in ['--username', '-u']) or (sys.argv[3] not in ['--count', '-c']):
-        print("Usage: python main.py --username <username> --count <count>")
-        print("       python main.py -u <username> -c <count>")
+    if len(sys.argv) < 3 or (sys.argv[1] not in ['--username', '-u']):
+        print("Usage: python main.py --username <username> [--count <count>]")
+        print("       python main.py -u <username> [-c <count>]")
         print("Options:")
         print("  --username, -u <username>  Specify the Twitter username to scrape media from.")
-        print("  --count, -c <count>        Specify the number of media items to download.")
+        print("  --count, -c <count>        Specify the number of media items to download (default is 5).")
         sys.exit(1)
     
     username = sys.argv[2]
-    try:
-        count = int(sys.argv[4])
-    except ValueError:
-        logging.error("Count must be an integer.")
-        sys.exit(1)
+    count = 5  # Default count
+    if len(sys.argv) > 3 and sys.argv[3] in ['--count', '-c']:
+        try:
+            count = int(sys.argv[4])
+        except (ValueError, IndexError):
+            logging.error("Count must be an integer.")
+            sys.exit(1)
     
     user_id = get_user_id(username)
     if user_id is None:
