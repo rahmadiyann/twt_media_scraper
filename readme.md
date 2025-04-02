@@ -43,7 +43,7 @@ API_KEY=your_api_key_here
 Run the script with a Twitter username as an argument:
 
 ```bash
-python main.py username
+python main.py --username username --count count
 ```
 
 The script will:
