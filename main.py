@@ -159,7 +159,10 @@ def main():
     Main function to execute the script. It retrieves user media and saves it locally.
     """
     if len(sys.argv) != 4 or sys.argv[1] != '--username' or sys.argv[3] != '--count':
-        logging.error("Usage: python main.py --username <username> --count <count>")
+        print("Usage: python main.py --username <username> --count <count>")
+        print("Options:")
+        print("  --username <username>  Specify the Twitter username to scrape media from.")
+        print("  --count <count>        Specify the number of media items to download.")
         sys.exit(1)
     
     username = sys.argv[2]
