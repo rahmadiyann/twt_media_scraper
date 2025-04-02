@@ -97,10 +97,6 @@ All operations are logged with timestamps and appropriate log levels:
 - python-dotenv: For environment variable management
 - yt-dlp: For video downloads
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
