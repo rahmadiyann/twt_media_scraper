@@ -72,23 +72,29 @@ def download_media(url: str, file_name: str, media_type: str):
         except Exception as e:
             logging.error(f"Error downloading video: {e}")
 
-def get_user_media(user_id: int, count: int = 100) -> Optional[List[Dict]]:
+def get_user_media(user_id: int, count: int, cursor: str = None) -> Tuple[Optional[List[Dict]], Optional[str]]:
     """
     Retrieves media associated with a specific user ID.
 
     Args:
         user_id (int): The ID of the user whose media is to be retrieved.
-        count (int, optional): The number of media items to retrieve. Defaults to 100.
+        count (int, optional): The number of media items to retrieve. Defaults to 5.
+        cursor (str, optional): The cursor for pagination. Defaults to None.
 
     Returns:
-        Optional[List[Dict]]: A list of dictionaries containing media information, or None if an error occurs.
+        Tuple[Optional[List[Dict]], Optional[str]]: A tuple containing:
+            - A list of dictionaries containing media information, or None if an error occurs
+            - The next cursor for pagination, or None if there are no more results
     """
     querystring = {"user": str(user_id), "count": str(count)}
+    if cursor:
+        querystring["cursor"] = cursor
+
     data, status_code, response_text = make_request("user-media", querystring)
     
     if status_code != 200:
         logging.error(f"Error getting user media: {response_text}")
-        return None
+        return None, None
     
     final_data = []
     full_counter = 1
@@ -97,10 +103,19 @@ def get_user_media(user_id: int, count: int = 100) -> Optional[List[Dict]]:
         entries = data['result']['timeline']['instructions'][1]['entries']
     except (KeyError, IndexError) as e:
         logging.error(f"Unexpected data format: {e}")
-        return None
+        return None, None
+    
+    next_cursor = None
     
     for entry in entries:
         content = entry.get('content', {})
+        
+        # Handle cursor entries
+        if content.get('entryType') == 'TimelineTimelineCursor':
+            if content.get('cursorType') == 'Bottom':
+                next_cursor = content.get('value')
+            continue
+            
         if content.get('entryType') != 'TimelineTimelineItem':
             continue
         
@@ -133,7 +148,7 @@ def get_user_media(user_id: int, count: int = 100) -> Optional[List[Dict]]:
         })
         full_counter += 1
             
-    return final_data
+    return final_data, next_cursor
 
 def get_user_id(username: str) -> Optional[int]:
     """
@@ -181,10 +196,6 @@ def main():
     if user_id is None:
         sys.exit(1)
     
-    datas = get_user_media(user_id, count)
-    if datas is None:
-        sys.exit(1)
-        
     media_folder = f"medias/{username}"
     os.makedirs(media_folder, exist_ok=True)
     
@@ -193,14 +204,32 @@ def main():
     os.makedirs(photo_folder, exist_ok=True)
     os.makedirs(video_folder, exist_ok=True)
     
-    for data in datas:
+    all_data = []
+    current_cursor = None
+    total_items = 0
+    
+    while total_items < count:
+        batch_size = min(100, count - total_items)  # API limit is 100 per request
+        datas, next_cursor = get_user_media(user_id, batch_size, current_cursor)
+        
+        if datas is None:
+            break
+            
+        all_data.extend(datas)
+        total_items += len(datas)
+        current_cursor = next_cursor
+        
+        if not current_cursor:
+            break
+    
+    for data in all_data:
         if data['media_type'] == 'photo':
             download_media(data['media_url'], f"{photo_folder}/{data['id']}.jpg", 'photo')
         elif data['media_type'] == 'video':
             download_media(data['media_url'], f"{video_folder}/video_{data['id']}.mp4", 'video')
     
     with open(f"{media_folder}/data.json", 'w') as f:
-        json.dump(datas, f, indent=4)
+        json.dump(all_data, f, indent=4)
 
 if __name__ == '__main__':
     main()
