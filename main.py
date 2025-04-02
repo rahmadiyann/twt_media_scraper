@@ -158,16 +158,21 @@ def main():
     """
     Main function to execute the script. It retrieves user media and saves it locally.
     """
-    if len(sys.argv) != 2:
-        logging.error("Usage: python main.py <username>")
+    if len(sys.argv) != 4 or sys.argv[1] != '--username' or sys.argv[3] != '--count':
+        logging.error("Usage: python main.py --username <username> --count <count>")
         sys.exit(1)
     
-    username = sys.argv[1]
+    username = sys.argv[2]
+    try:
+        count = int(sys.argv[4])
+    except ValueError:
+        logging.error("Count must be an integer.")
+        sys.exit(1)
+    
     user_id = get_user_id(username)
     if user_id is None:
         sys.exit(1)
     
-    count = 2
     datas = get_user_media(user_id, count)
     if datas is None:
         sys.exit(1)
