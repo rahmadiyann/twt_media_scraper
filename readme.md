@@ -32,11 +32,10 @@ cd twt_media_scrapper
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the project root with your API credentials:
+3. Copy `.env copy` and rename to `.env` in the project root with your API credentials:
 
 ```
 API_KEY=your_api_key_here
-API_HOST=your_api_host_here
 ```
 
 ## Usage
