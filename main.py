@@ -118,6 +118,8 @@ def get_user_media(user_id: int, count: int = 100) -> Optional[List[Dict]]:
             mp4_variants = [v for v in variants if v['content_type'] == 'video/mp4']
             if mp4_variants:
                 media_url = max(mp4_variants, key=lambda x: x.get('bitrate', 0))['url']
+        elif media_type == 'photo':
+            media_url = media_entities[0].get('media_url_https')
         
         created_at = result.get('legacy', {}).get('created_at')
         full_text = result.get('legacy', {}).get('full_text')
